@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Housing Price Predictor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            padding: 40px;
+        }
+
+        .form-section {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #e9ecef;
+        }
+
+        .form-section h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input, 
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        .predict-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .predict-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .predict-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .results-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .results-section h2 {
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #27ae60;
+            padding-bottom: 10px;
+        }
+
+        .prediction-result {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 2px solid #27ae60;
+        }
+
+        .prediction-result h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .price-display {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+
+        .confidence-info {
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+
+        .model-info {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #3498db;
+        }
+
+        .model-info h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .model-info ul {
+            color: #495057;
+            line-height: 1.6;
+        }
+
+        .model-info li {
+            margin-bottom: 5px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+            margin-top: 15px;
+            display: none;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .price-display {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏠 Housing Price Predictor</h1>
+            <p>Advanced ML model with 92% accuracy using Random Forest & Non-linear Regression</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-section">
+                <h2>Property Details</h2>
+                <form id="predictionForm">
+                    <div class="form-group">
+                        <label for="size">Property Size (sq ft)</label>
+                        <input type="number" id="size" name="size" min="300" max="10000" required placeholder="e.g., 1500">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bedrooms">Number of Bedrooms</label>
+                        <input type="number" id="bedrooms" name="bedrooms" min="1" max="10" required placeholder="e.g., 3">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="bathrooms">Number of Bathrooms</label>
+                        <input type="number" id="bathrooms" name="bathrooms" min="1" max="8" required placeholder="e.g., 2">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="avg_local_rent">Average Local Rent (₹)</label>
+                        <input type="number" id="avg_local_rent" name="avg_local_rent" min="5000" max="200000" required placeholder="e.g., 25000">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="growth_rate">Market Growth Rate (%)</label>
+                        <input type="number" id="growth_rate" name="growth_rate" min="-10" max="20" step="0.1" required placeholder="e.g., 5.5">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="city_tier">City Tier</label>
+                        <select id="city_tier" name="city_tier" required>
+                            <option value="">Select city tier...</option>
+                            <option value="1">Tier 1 (Metro Cities)</option>
+                            <option value="2">Tier 2 (Major Cities)</option>
+                            <option value="3">Tier 3 (Smaller Cities)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="property_type">Property Type</label>
+                        <select id="property_type" name="property_type" required>
+                            <option value="">Select property type...</option>
+                            <option value="apartment">Apartment</option>
+                            <option value="house">House</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="furnishing">Furnishing Level</label>
+                        <select id="furnishing" name="furnishing" required>
+                            <option value="">Select furnishing...</option>
+                            <option value="1">Unfurnished</option>
+                            <option value="2">Semi-furnished</option>
+                            <option value="3">Fully furnished</option>
+                            <option value="4">Premium furnished</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="rera_registered">RERA Registered</label>
+                        <select id="rera_registered" name="rera_registered" required>
+                            <option value="">Select registration status...</option>
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="move_in_ready">Move-in Ready</label>
+                        <select id="move_in_ready" name="move_in_ready" required>
+                            <option value="">Select readiness...</option>
+                            <option value="0">Under Construction</option>
+                            <option value="1">Ready to Move</option>
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="predict-btn" id="predictBtn">
+                        🔮 Predict Price
+                    </button>
+                </form>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing property data...</p>
+                </div>
+                
+                <div class="error" id="error"></div>
+            </div>
+            
+            <div class="results-section">
+                <h2>Prediction Results</h2>
+                
+                <div class="prediction-result" id="results" style="display: none;">
+                    <h3>Estimated Property Value</h3>
+                    <div class="price-display" id="priceDisplay">$0</div>
+                    <div class="confidence-info">Based on advanced ML analysis with polynomial features</div>
+                </div>
+                
+                <div class="model-info">
+                    <h4>🤖 Your OLS Model</h4>
+                    <ul>
+                        <li><strong>Model:</strong> Multiple Linear Regression with Non-linear terms</li>
+                        <li><strong>Accuracy:</strong> 92% R² score from your analysis</li>
+                        <li><strong>Features:</strong> Size, size², beds×tier, tier×growth interactions</li>
+                        <li><strong>Data Sources:</strong> K-map rental data, Google temporal database</li>
+                        <li><strong>Coefficients:</strong> Directly from your OLS regression results</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('predictionForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const predictBtn = document.getElementById('predictBtn');
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const error = document.getElementById('error');
+            const priceDisplay = document.getElementById('priceDisplay');
+            
+            // Hide previous results and errors
+            results.style.display = 'none';
+            error.style.display = 'none';
+            
+            // Show loading
+            loading.style.display = 'block';
+            predictBtn.disabled = true;
+            predictBtn.textContent = 'Predicting...';
+            
+            try {
+                // Collect form data
+                const formData = new FormData(this);
+                
+                // Send prediction request
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Show results
+                    priceDisplay.textContent = data.formatted_price;
+                    results.style.display = 'block';
+                    
+                    // Add some animation
+                    results.style.opacity = '0';
+                    results.style.transform = 'translateY(20px)';
+                    setTimeout(() => {
+                        results.style.transition = 'all 0.5s ease';
+                        results.style.opacity = '1';
+                        results.style.transform = 'translateY(0)';
+                    }, 100);
+                } else {
+                    // Show error
+                    error.textContent = 'Prediction failed: ' + data.error;
+                    error.style.display = 'block';
+                }
+                
+            } catch (err) {
+                error.textContent = 'Network error: Please check your connection and try again.';
+                error.style.display = 'block';
+            } finally {
+                // Hide loading
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+                predictBtn.textContent = '🔮 Predict Price';
+            }
+        });
+        
+        // Add input validation and formatting
+        document.getElementById('size').addEventListener('input', function() {
+            if (this.value < 300) this.value = 300;
+            if (this.value > 10000) this.value = 10000;
+        });
+        
+        document.getElementById('avg_local_rent').addEventListener('input', function() {
+            if (this.value < 5000) this.value = 5000;
+            if (this.value > 200000) this.value = 200000;
+        });
+    </script>
+</body>
+</html>
